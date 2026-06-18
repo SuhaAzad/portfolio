@@ -1,63 +1,37 @@
-# ==============================
-# GitLab CI/CD for Portfolio App
-# Deploys Docker image to GCP Cloud Run
-# ==============================
-
 stages:
   - deploy
 
 deploy:
   stage: deploy
 
-  # Docker-in-Docker is required for building images
-  image: docker:latest
+  # Use Google Cloud SDK image (NO manual install needed)
+  image: google/cloud-sdk:slim
+
   services:
     - docker:dind
 
   variables:
-    # GCP settings
     PROJECT_ID: $GCP_PROJECT_ID
     REGION: asia-south1
     REPO: portfolio-repo
     IMAGE: portfolio
 
   before_script:
-    # ------------------------------
-    # Authenticate with Google Cloud
-    # (Handled via Workload Identity Federation)
-    # ------------------------------
-    - echo "Setting up Google Cloud authentication..."
-
-    # Install required tools
-    - apk add --no-cache curl bash
-
-    # Install Google Cloud SDK
-    - curl -sSL https://sdk.cloud.google.com | bash
-    - source /root/google-cloud-sdk/path.bash.inc
-
-    # Set active project
+    # Authenticate project
+    - echo "Setting GCP project..."
     - gcloud config set project $PROJECT_ID
 
-    # Configure Docker to push to Artifact Registry
+    # Configure Docker for Artifact Registry
     - gcloud auth configure-docker $REGION-docker.pkg.dev -q
 
   script:
-    # ------------------------------
-    # Step 1: Build Docker image
-    # ------------------------------
-    - echo "Building Docker image..."
+    # Build Docker image
     - docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA .
 
-    # ------------------------------
-    # Step 2: Push to Artifact Registry
-    # ------------------------------
-    - echo "Pushing image to Artifact Registry..."
+    # Push image
     - docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA
 
-    # ------------------------------
-    # Step 3: Deploy to Cloud Run
-    # ------------------------------
-    - echo "Deploying to Cloud Run..."
+    # Deploy to Cloud Run
     - |
       gcloud run deploy portfolio-app \
         --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA \
