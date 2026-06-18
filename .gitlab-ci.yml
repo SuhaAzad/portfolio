@@ -1,35 +1,66 @@
+# ==============================
+# GitLab CI/CD for Portfolio App
+# Deploys Docker image to GCP Cloud Run
+# ==============================
+
 stages:
   - deploy
 
 deploy:
-  image: google/cloud-sdk:slim
+  stage: deploy
+
+  # Docker-in-Docker is required for building images
+  image: docker:latest
   services:
     - docker:dind
 
   variables:
+    # GCP settings
     PROJECT_ID: $GCP_PROJECT_ID
     REGION: asia-south1
     REPO: portfolio-repo
     IMAGE: portfolio
 
   before_script:
-    # Authenticate using GitLab OIDC (WIF handles trust)
-    - echo "Authenticating with Workload Identity Federation..."
+    # ------------------------------
+    # Authenticate with Google Cloud
+    # (Handled via Workload Identity Federation)
+    # ------------------------------
+    - echo "Setting up Google Cloud authentication..."
+
+    # Install required tools
+    - apk add --no-cache curl bash
+
+    # Install Google Cloud SDK
+    - curl -sSL https://sdk.cloud.google.com | bash
+    - source /root/google-cloud-sdk/path.bash.inc
+
+    # Set active project
     - gcloud config set project $PROJECT_ID
 
-    # Configure Docker auth for Artifact Registry
+    # Configure Docker to push to Artifact Registry
     - gcloud auth configure-docker $REGION-docker.pkg.dev -q
 
   script:
-    # Build Docker image
+    # ------------------------------
+    # Step 1: Build Docker image
+    # ------------------------------
+    - echo "Building Docker image..."
     - docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA .
 
-    # Push image to Artifact Registry
+    # ------------------------------
+    # Step 2: Push to Artifact Registry
+    # ------------------------------
+    - echo "Pushing image to Artifact Registry..."
     - docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA
 
-    # Deploy to Cloud Run
-    - gcloud run deploy portfolio-app
-      --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA
-      --region $REGION
-      --platform managed
-      --allow-unauthenticated
+    # ------------------------------
+    # Step 3: Deploy to Cloud Run
+    # ------------------------------
+    - echo "Deploying to Cloud Run..."
+    - |
+      gcloud run deploy portfolio-app \
+        --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA \
+        --region $REGION \
+        --platform managed \
+        --allow-unauthenticated
