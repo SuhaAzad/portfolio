@@ -10,8 +10,8 @@ box-sizing:border-box;
 body{
 
 font-family:Arial;
-background:#020617;
-color:white;
+background:#1c0212;
+color:rgb(128, 99, 141);
 
 }
 
@@ -22,14 +22,14 @@ nav{
 display:flex;
 justify-content:space-between;
 padding:20px 50px;
-background:#0f172a;
+background:#1c0212;
 
 }
 
 
 nav a{
 
-color:white;
+color:rgb(128, 99, 141);
 margin:15px;
 text-decoration:none;
 
@@ -96,8 +96,8 @@ flex-wrap:wrap;
 
 .skills span{
 
-background:#38bdf8;
-color:black;
+background:#cb38f8;
+color:rgb(128, 99, 141);
 padding:10px;
 border-radius:8px;
 
@@ -107,7 +107,7 @@ border-radius:8px;
 
 .card{
 
-background:#1e293b;
+background:#311e3b;
 padding:20px;
 border-radius:10px;
 
@@ -125,7 +125,7 @@ object-fit:cover;
 
 margin-bottom:30px;
 
-border:4px solid #38bdf8;
+border:4px solid #cb38f8;
 
 }
 
