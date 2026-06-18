@@ -8,7 +8,8 @@ let skills=[
 "Blockchain",
 "Solidity",
 "Cloud",
-"DevOps"
+"DevOps",
+"IoT"
 ]
 
 
