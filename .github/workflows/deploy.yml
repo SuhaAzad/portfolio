@@ -1,4 +1,4 @@
-name: Portfolio Pipeline
+name: Portfolio CI
 
 on:
 push:
@@ -11,10 +11,16 @@ runs-on: ubuntu-latest
 
 ```
 steps:
-  - name: Checkout Repository
+  - name: Checkout code
     uses: actions/checkout@v4
 
-  - name: Build Docker Image
-    run: docker build -t portfolio .
-```
+  - name: Set up Docker Buildx
+    uses: docker/setup-buildx-action@v3
 
+  - name: Build Docker image
+    uses: docker/build-push-action@v5
+    with:
+      context: .
+      push: false
+      tags: portfolio:latest
+```
