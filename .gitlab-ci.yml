@@ -2,31 +2,29 @@ stages:
   - deploy
 
 deploy:
-  image: google/cloud-sdk:latest
-
+  image: google/cloud-sdk:slim
   services:
     - docker:dind
 
   variables:
+    PROJECT_ID: $GCP_PROJECT_ID
     REGION: asia-south1
-    PROJECT_ID: portfolio-499709
     REPO: portfolio-repo
     IMAGE: portfolio
 
-  script:
-    # Authenticate using Workload Identity Federation
-    - gcloud auth login --cred-file=$GCP_CREDENTIALS
-
-    # Configure project
+  before_script:
+    # Authenticate using GitLab OIDC (WIF handles trust)
+    - echo "Authenticating with Workload Identity Federation..."
     - gcloud config set project $PROJECT_ID
 
-    # Build image
-    - docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA .
-
-    # Auth docker
+    # Configure Docker auth for Artifact Registry
     - gcloud auth configure-docker $REGION-docker.pkg.dev -q
 
-    # Push image
+  script:
+    # Build Docker image
+    - docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA .
+
+    # Push image to Artifact Registry
     - docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA
 
     # Deploy to Cloud Run
