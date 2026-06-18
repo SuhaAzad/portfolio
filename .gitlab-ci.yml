@@ -1,9 +1,12 @@
 stages:
   - build
 
-build-app:
-  image: node:20
+build-docker-image:
+  image: docker:latest
+  services:
+    - docker:dind
+
   stage: build
+
   script:
-    - npm install
-    - npm run build
+    - docker build -t portfolio .
