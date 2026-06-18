@@ -1,34 +1,35 @@
 stages:
-  - build
   - deploy
 
-variables:
-  REGION: asia-south1
-  PROJECT_ID: portfolio-499709
-  REPO: portfolio-repo
-  IMAGE: portfolio
+deploy:
+  image: google/cloud-sdk:latest
 
-build-image:
-  image: docker:latest
   services:
     - docker:dind
-  stage: build
-  script:
-    - docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA .
 
-deploy-cloudrun:
-  image: google/cloud-sdk:latest
-  stage: deploy
+  variables:
+    REGION: asia-south1
+    PROJECT_ID: portfolio-499709
+    REPO: portfolio-repo
+    IMAGE: portfolio
+
   script:
-    - echo "Authenticating to GCP..."
+    # Authenticate using Workload Identity Federation
+    - gcloud auth login --cred-file=$GCP_CREDENTIALS
+
+    # Configure project
     - gcloud config set project $PROJECT_ID
 
-    - echo "Pushing image..."
+    # Build image
+    - docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA .
+
+    # Auth docker
     - gcloud auth configure-docker $REGION-docker.pkg.dev -q
 
+    # Push image
     - docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA
 
-    - echo "Deploying to Cloud Run..."
+    # Deploy to Cloud Run
     - gcloud run deploy portfolio-app
       --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA
       --region $REGION
