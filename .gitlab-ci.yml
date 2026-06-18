@@ -17,13 +17,8 @@ deploy:
     IMAGE: portfolio
 
   before_script:
-    # Authenticate project
-    - echo "Setting GCP project..."
-    - gcloud config set project $PROJECT_ID
-
-    # Configure Docker for Artifact Registry
-    - gcloud auth configure-docker $REGION-docker.pkg.dev -q
-
+  - echo "DEBUG PROJECT_ID=$GCP_PROJECT_ID"
+  - if [ -z "$GCP_PROJECT_ID" ]; then echo "MISSING VARIABLE"; exit 1; fi
   script:
     # Build Docker image
     - docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA .
