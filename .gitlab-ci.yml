@@ -16,7 +16,6 @@ deploy:
 
   before_script:
     - echo "DEBUG GCP_PROJECT_ID=$GCP_PROJECT_ID"
-    - if [ -z "$GCP_PROJECT_ID" ]; then echo "ERROR: GCP_PROJECT_ID is empty"; exit 1; fi
     - gcloud config set project "$GCP_PROJECT_ID"
 
   script:
@@ -27,9 +26,9 @@ deploy:
     - docker push $REGION-docker.pkg.dev/$GCP_PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA
 
     - echo "Deploying to Cloud Run..."
-    - |
-      gcloud run deploy portfolio-app \
-        --image $REGION-docker.pkg.dev/$GCP_PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA \
-        --region $REGION \
-        --platform managed \
-        --allow-unauthenticated
+    - >
+      gcloud run deploy portfolio-app
+      --image $REGION-docker.pkg.dev/$GCP_PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA
+      --region $REGION
+      --platform managed
+      --allow-unauthenticated
