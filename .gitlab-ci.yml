@@ -1,34 +1,14 @@
+image: node:20
+
 stages:
-  - deploy
+  - test
 
-deploy:
-  stage: deploy
+cache:
+  paths:
+    - node_modules/
 
-  image: google/cloud-sdk:slim
-
-  services:
-    - docker:dind
-
-  variables:
-    REGION: "asia-south1"
-    REPO: "portfolio-repo"
-    IMAGE: "portfolio"
-
-  before_script:
-    - echo "DEBUG GCP_PROJECT_ID=$GCP_PROJECT_ID"
-    - gcloud config set project "$GCP_PROJECT_ID"
-
+test-build:
+  stage: test
   script:
-    - echo "Building Docker image..."
-    - docker build -t $REGION-docker.pkg.dev/$GCP_PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA .
-
-    - echo "Pushing Docker image..."
-    - docker push $REGION-docker.pkg.dev/$GCP_PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA
-
-    - echo "Deploying to Cloud Run..."
-    - >
-      gcloud run deploy portfolio-app
-      --image $REGION-docker.pkg.dev/$GCP_PROJECT_ID/$REPO/$IMAGE:$CI_COMMIT_SHA
-      --region $REGION
-      --platform managed
-      --allow-unauthenticated
+    - npm install
+    - npm run build
