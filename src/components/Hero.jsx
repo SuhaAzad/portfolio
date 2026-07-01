@@ -26,7 +26,7 @@ Computer Science Engineer
 
 
 <p>
-Blockchain Developer | DevOps Learner
+ DevOps Learner
 </p>
 
 
